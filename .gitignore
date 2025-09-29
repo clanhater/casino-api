@@ -1,0 +1,10 @@
+# Archivo .gitignore
+
+# Dependencias
+node_modules/
+
+# Archivos de entorno - ¡NUNCA SUBIR A GITHUB!
+.env
+
+# Archivos de base de datos (opcional, pero recomendado para desarrollo)
+database/casino.db
