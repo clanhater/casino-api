@@ -3,65 +3,65 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { db } = require('../database/database.js');
 
-
-
-// --- FUNCIÓN DE REGISTRO ---
-const register = (req, res) => {
+// --- FUNCIÓN DE REGISTRO (Refactorizada para PostgreSQL) ---
+const register = async (req, res) => {
     const { username, password } = req.body;
 
-    // Validación básica
     if (!username || !password) {
         return res.status(400).json({ message: "El nombre de usuario y la contraseña son obligatorios." });
     }
 
-    // Hashear la contraseña antes de guardarla
-    const salt = bcrypt.genSaltSync(10);
-    const password_hash = bcrypt.hashSync(password, salt);
+    try {
+        const salt = bcrypt.genSaltSync(10);
+        const password_hash = bcrypt.hashSync(password, salt);
 
-    const sql = 'INSERT INTO users (username, password_hash) VALUES (?, ?)';
-    const params = [username, password_hash];
+        // Usamos $1 y $2 para los parámetros en PostgreSQL
+        const sql = 'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id';
+        const params = [username, password_hash];
 
-    db.run(sql, params, function(err) {
-        if (err) {
-            // El código 19 corresponde a una violación de la restricción UNIQUE (username repetido)
-            if (err.errno === 19) {
-                return res.status(409).json({ message: "El nombre de usuario ya existe." });
-            }
-            return res.status(500).json({ message: "Error al registrar el usuario.", error: err.message });
+        const result = await db.query(sql, params);
+        
+        res.status(201).json({ message: "Usuario registrado con éxito.", userId: result.rows[0].id });
+
+    } catch (err) {
+        // El código de error para violación de unicidad en PostgreSQL es '23505'
+        if (err.code === '23505') {
+            return res.status(409).json({ message: "El nombre de usuario ya existe." });
         }
-        res.status(201).json({ message: "Usuario registrado con éxito.", userId: this.lastID });
-    });
+        console.error(err);
+        return res.status(500).json({ message: "Error al registrar el usuario.", error: err.message });
+    }
 };
 
-// --- FUNCIÓN DE LOGIN ---
-const login = (req, res) => {
+// --- FUNCIÓN DE LOGIN (Refactorizada para PostgreSQL) ---
+const login = async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
         return res.status(400).json({ message: "El nombre de usuario y la contraseña son obligatorios." });
     }
 
-    const sql = 'SELECT * FROM users WHERE username = ?';
-    db.get(sql, [username], (err, user) => {
-        if (err) {
-            return res.status(500).json({ message: "Error en el servidor.", error: err.message });
-        }
-        if (!user) {
+    try {
+        const sql = 'SELECT * FROM users WHERE username = $1';
+        const result = await db.query(sql, [username]);
+
+        // 'result.rows' es un array. Si está vacío, el usuario no existe.
+        if (result.rows.length === 0) {
             return res.status(404).json({ message: "El usuario no existe." });
         }
 
-        // Comparar la contraseña enviada con el hash guardado en la BBDD
+        const user = result.rows[0]; // El usuario encontrado
+
         const passwordIsValid = bcrypt.compareSync(password, user.password_hash);
 
         if (!passwordIsValid) {
             return res.status(401).json({ message: "Contraseña incorrecta." });
         }
 
-        // Si la contraseña es válida, crear y firmar un token JWT
         const token = jwt.sign(
-            { id: user.id, username: user.username }, // Payload del token
-            process.env.JWT_SECRET,                            // Clave secreta
-            { expiresIn: '24h' }                     // El token expirará en 24 horas
+            { id: user.id, username: user.username },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
         );
 
         res.status(200).json({
@@ -73,7 +73,11 @@ const login = (req, res) => {
                 coins: user.coins
             }
         });
-    });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Error en el servidor.", error: err.message });
+    }
 };
 
 module.exports = { register, login };

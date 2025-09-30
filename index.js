@@ -2,7 +2,6 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-const { initDb } = require('./database/database.js');
 const { startLotteryCron } = require('./services/cronJobs');
 
 // Importar las rutas
@@ -42,7 +41,6 @@ app.use(cors(corsOptions)); // <-- 2. USAR EL MIDDLEWARE DE CORS CON LA CONFIGUR
 app.use(express.json({ limit: '1mb' }));
 
 // Inicializar la base de datos
-initDb();
 startLotteryCron();
 
 // Middleware para entender JSON
