@@ -6,6 +6,16 @@ Este documento sirve como guía para desarrolladores de frontend que necesiten i
 
 ---
 
+## 🌐 API en Vivo
+
+¡La API está desplegada y lista para usar!
+
+**URL Base de Producción:** `https://casino-api-rose.vercel.app/`
+
+Puedes usar esta URL para integrar el frontend directamente o para hacer pruebas con herramientas como Postman. Para el desarrollo local, sigue las instrucciones de la siguiente sección.
+
+---
+
 ## 🚀 Cómo Empezar
 
 Para ejecutar este proyecto en un entorno de desarrollo local, sigue estos pasos:
@@ -236,6 +246,16 @@ Todas las peticiones a endpoints protegidos deben incluir la siguiente cabecera 
         { "winningNumber": 14, "timestamp": "..." }
     ]
     ```
+
+---
+
+### 🛠️ Stack Tecnológico
+
+-   **Framework:** Node.js, Express.js
+-   **Base de Datos:** PostgreSQL (alojada en Supabase).
+-   **Autenticación:** JWT (JSON Web Tokens) con `bcrypt` para el hasheo de contraseñas.
+-   **Tareas Programadas:** `node-cron` para la lotería diaria.
+-   **Despliegue:** Vercel.
 
 ---
 
