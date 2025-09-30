@@ -19,7 +19,7 @@ const whitelist = [
     'http://127.0.0.1:5500', // Origen común para Live Server de VS Code
     'http://localhost:5500',
     'http://localhost:8080', // Otro puerto común de desarrollo
-	'https://casino-five-sand.vercel.app/',
+	'https://casino-five-sand.vercel.app',
 ];
 
 const corsOptions = {
